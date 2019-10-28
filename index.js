@@ -1,23 +1,24 @@
 const mongoose = require("mongoose");
 mongoose
-  .connect("mongodb://localhost/playground")
+  .connect("mongodb://localhost/mongo-exercises")
   .then(() => console.log("connected to MongoDB"))
   .catch(err => console.error("Could not connect to mongodb...", err));
 
 const movieSchema = new mongoose.Schema({
   name: String,
-  director: String,
+  author: String,
   tags: [String],
   date: { type: Date, default: Date.now },
-  isPublished: Boolean
+  isPublished: Boolean,
+  price: Number
 });
 
-const Movie = mongoose.model("Movie", movieSchema);
+const Course = mongoose.model("Course", movieSchema);
 
 async function createMovie() {
-  const movie = new Movie({
+  const movie = new Course({
     name: "Big Hero 6",
-    director: "Roger Allers",
+    author: "Roger Allers",
     tags: ["animated", "comedy"],
     isPublished: true
   });
@@ -25,14 +26,15 @@ async function createMovie() {
   console.log(result);
 }
 async function getCources() {
-  const movies = await Movie
+  const movies = await Course
     //   .find({ isPublished: true })
     // .find({ price: { $gt: 10, $lte: 20 } })
-    .find()
-    .or([{ name: /Hero/ }])
-    .limit(10)
-    .sort({ name: -1 })
-    .select({ name: 1, tags: 1 });
+    .find({ isPublished: true })
+    .or([{ price: { $gte: 15 } }, { name: /by/i }])
+    // .or([{ name: /Hero/ }])
+    .sort({ price: -1 })
+    .select({ name: 1, author: 1, price: 1 });
+  // .count();
   console.log(movies);
 }
 
