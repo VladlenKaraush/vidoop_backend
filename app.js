@@ -1,63 +1,33 @@
 const express = require("express");
+const debug = require("debug")("app:startup");
+const morgan = require("morgan");
+const config = require("config");
+const helmet = require("helmet");
 const app = express();
-const Joi = require("@hapi/joi");
+const logger = require("./middleware/logger");
+const movies = require("./routes/movies");
+const home = require("./routes/home");
+const genres = require("./routes/genres");
+
+app.set("view engine", "pug");
+app.set("views", "./views");
+
 app.use(express.json());
+app.use(helmet());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.use("/api/movies", movies);
+app.use("/api/genres", genres);
+app.use("/", home);
 
-const schema = Joi.object({
-  name: Joi.string()
-    .min(3)
-    .max(30)
-    .required()
-});
+console.log(" name: " + config.get("name"));
+console.log(" mail server: " + config.get("mail.host"));
+console.log(" mail password: " + config.get("mail.password"));
 
-const movies = [
-  { id: 1, name: "Dead poets society" },
-  { id: 2, name: "Project Florida" },
-  { id: 3, name: "Equilibrium" }
-];
-app.get("/", (req, res) => {
-  res.send("Hello world!");
-});
-
-app.get("/api/movies", (req, res) => {
-  res.send(movies);
-});
-
-app.get("/api/movies/:id", (req, res) => {
-  const movie = movies.find(el => el.id === parseInt(req.params.id));
-  if (!movie) res.status(404).send("The movie with the given ID was not found");
-  res.send(movie);
-});
-
-app.post("/api/movies", (req, res) => {
-  const { error } = schema.validate(req.body);
-  if (error) {
-    res.status(400).send(error.details[0].message);
-    return;
-  }
-  const movie = {
-    id: movies.length + 1,
-    name: req.body.name
-  };
-  movies.push(movie);
-  res.send(movie);
-});
-
-app.put("/api/movies/:id", (req, res) => {
-  //   movie lookup in state
-  const movie = movies.find(el => el.id === parseInt(req.params.id));
-  if (!movie) res.status(404).send("The movie with the given ID was not found");
-
-  //   movie validation
-  const { error } = schema.validate(req.body);
-  if (error) {
-    res.status(400).send(error.details[0].message);
-    return;
-  }
-  //   movie update
-  movie.name = req.body.name;
-  res.send(movie);
-});
+if (app.get("env") === "development") {
+  app.use(morgan("tiny"));
+  debug("Morgan enabled...");
+}
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
