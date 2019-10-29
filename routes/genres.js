@@ -26,38 +26,41 @@ const schema = Joi.object({
     .required()
 });
 
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   const genres = await Genre.find();
   res.send(genres);
 });
 
-router.get("/:id", (req, res) => {
-  const genre = await Genre.findById(req.params.id)
+router.get("/:id", async (req, res) => {
+  const genre = await Genre.findById(req.params.id);
   if (!genre) res.status(404).send("The genre with the given ID was not found");
   res.send(genre);
 });
 
-router.post("", (req, res) => {
+router.post("", async (req, res) => {
   const { error } = schema.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
   const genre = new Genre({
     name: req.body.name
-  })
-  try{
+  });
+  try {
     const result = await genre.save();
     res.send(result);
-  } catch (ex){
+  } catch (ex) {
     console.log(ex.message);
     res.send(ex.message);
   }
 });
 
-router.put("/:id", (req, res) => {
-  const genre = Genre.findByIdAndUpdate({_id: req.params.id}, {
-    $set: {
-      name: req.body.name
+router.put("/:id", async (req, res) => {
+  const genre = Genre.findByIdAndUpdate(
+    { _id: req.params.id },
+    {
+      $set: {
+        name: req.body.name
+      }
     }
-  })
+  );
   if (!genre)
     return res.status(404).send("The genre with the given ID was not found");
 
@@ -70,16 +73,14 @@ router.put("/:id", (req, res) => {
   res.send(genre);
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", async (req, res) => {
   //   movie lookup in state
-    const result = await Genre.deleteOne({})
-  const genre = genres.find(el => el.id === parseInt(req.params.id));
-  if (!genre)
-    return res.status(404).send("The genre with the given ID was not found");
-
-  const ind = genres.indexOf(genre);
-  genres.splice(ind, 1);
-  res.send(genre);
+  const result = await Genre.deleteOne({ _id: req.params.id });
+  if (result.n > 0) {
+    res.send("OK");
+  } else {
+    res.status(404).send("The genre with the given ID was not found");
+  }
 });
 
 module.exports = router;
