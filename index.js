@@ -11,6 +11,8 @@ const movieSchema = new mongoose.Schema({
     type: Number,
     min: 0,
     max: 100,
+    get: v => Math.round(v),
+    set: v => Math.round(v),
     required: function() {
       return this.numberInStock;
     }
@@ -21,7 +23,7 @@ const movieSchema = new mongoose.Schema({
       isAsync: true,
       validator: function(v, callback) {
         setTimeout(() => {
-          const result = v && v.lentgh > 0;
+          const result = v && v.length > 0;
           callback(result);
         }, 100);
       },
@@ -35,17 +37,17 @@ const Movie = mongoose.model("Movie", movieSchema);
 
 async function createMovie() {
   const movie = new Movie({
-    title: "qqq",
-    tag: [],
+    title: "qqqasd",
+    tag: ["web"],
     // numberInStock: 20
-    dailyRentalRate: 500
+    dailyRentalRate: 10.4
   });
   try {
     const result = await movie.save();
     console.log(result);
   } catch (ex) {
     for (field in ex.errors) {
-      console.log(ex.errors[field]);
+      console.log(ex.errors[field].message);
     }
   }
 }
