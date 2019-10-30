@@ -1,67 +1,80 @@
 const express = require("express");
 const Joi = require("@hapi/joi");
 const router = express.Router();
+const { Genre } = require("../models/genre");
+const { Movie, validate } = require("../models/movie");
 
-const movies = [
-  { id: 1, name: "Dead poets society" },
-  { id: 2, name: "Project Florida" },
-  { id: 3, name: "Equilibrium" }
-];
+// const movies = [
+//   { id: 1, name: "Dead poets society" },
+//   { id: 2, name: "Project Florida" },
+//   { id: 3, name: "Equilibrium" }
+// ];
 
-const schema = Joi.object({
-  name: Joi.string()
-    .min(3)
-    .max(30)
-    .required()
-});
-
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
+  const movies = await Movie.find().sort("title");
   res.send(movies);
 });
 
-router.get("/:id", (req, res) => {
-  const movie = movies.find(el => el.id === parseInt(req.params.id));
+router.get("/:id", async (req, res) => {
+  const movie = await Movie.findById(req.params.id);
   if (!movie) res.status(404).send("The movie with the given ID was not found");
   res.send(movie);
 });
 
-router.post("", (req, res) => {
-  const { error } = schema.validate(req.body);
+router.post("/", async (req, res) => {
+  const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
-  const movie = {
-    id: movies.length + 1,
-    name: req.body.name
-  };
-  movies.push(movie);
-  res.send(movie);
-});
 
-router.put("/:id", (req, res) => {
-  //   movie lookup in state
-  const movie = movies.find(el => el.id === parseInt(req.params.id));
-  if (!movie)
-    return res.status(404).send("The movie with the given ID was not found");
-
-  //   movie validation
-  const { error } = schema.validate(req.body);
-  if (error) {
-    res.status(400).send(error.details[0].message);
-    return;
+  console.log(req.body);
+  const genre = await Genre.findById(req.body.genreId);
+  if (!genre) return res.status(400).send("invalid genre.");
+  let movie = new Movie({
+    title: req.body.title,
+    numberInStock: req.body.numberInStock,
+    dailyRentalRate: req.body.dailyRentalRate,
+    genre: {
+      _id: genre.id,
+      name: genre.name
+    }
+  });
+  try {
+    movie = await movie.save();
+    res.send(movie);
+  } catch (ex) {
+    console.log(ex.message);
+    res.send(ex.message);
   }
-  //   movie update
-  movie.name = req.body.name;
+});
+
+router.put("/:id", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const genre = await Genre.findById(req.body.genreId);
+  if (!genre) return res.status(400).send("invalid genre.");
+  const movie = await Movie.findByIdAndUpdate(
+    req.params.id,
+    {
+      title: req.body.title,
+      numberInStock: req.body.numberInStock,
+      dailyRentalRate: req.body.dailyRentalRate,
+      genre: {
+        _id: genre.id,
+        name: genre.name
+      }
+    },
+    { new: true }
+  );
+  if (!movie)
+    return res.status(404).send("The movie with the given ID was not found");
   res.send(movie);
 });
 
-router.delete("/:id", (req, res) => {
-  //   movie lookup in state
-  const movie = movies.find(el => el.id === parseInt(req.params.id));
-  if (!movie)
+router.delete("/:id", async (req, res) => {
+  const genre = await Movie.findByIdAndRemove(req.params.id);
+  if (!genre)
     return res.status(404).send("The movie with the given ID was not found");
-
-  const ind = movies.indexOf(movie);
-  movies.splice(ind, 1);
-  res.send(moviemovie);
+  res.send(movie);
 });
 
 module.exports = router;
