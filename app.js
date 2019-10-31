@@ -9,6 +9,8 @@ const app = express();
 const movies = require("./routes/movies");
 const home = require("./routes/home");
 const genres = require("./routes/genres");
+const customers = require("./routes/customers");
+const rentals = require("./routes/rentals");
 
 mongoose
   .connect("mongodb://localhost/vidly")
@@ -25,6 +27,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use("/api/movies", movies);
 app.use("/api/genres", genres);
+app.use("/api/customers", customers);
+app.use("/api/rentals", rentals);
 app.use("/", home);
 
 console.log(" name: " + config.get("name"));
