@@ -1,6 +1,6 @@
 const express = require("express");
-const Joi = require("@hapi/joi");
 const router = express.Router();
+const auth = require("../middleware/auth");
 const { Genre } = require("../models/genre");
 const { Movie, validate } = require("../models/movie");
 
@@ -15,7 +15,7 @@ router.get("/:id", async (req, res) => {
   res.send(movie);
 });
 
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -64,9 +64,9 @@ router.put("/:id", async (req, res) => {
   res.send(movie);
 });
 
-router.delete("/:id", async (req, res) => {
-  const genre = await Movie.findByIdAndRemove(req.params.id);
-  if (!genre)
+router.delete("/:id", auth, async (req, res) => {
+  const movie = await Movie.findByIdAndRemove(req.params.id);
+  if (!movie)
     return res.status(404).send("The movie with the given ID was not found");
   res.send(movie);
 });

@@ -15,7 +15,7 @@ const genres = require("./routes/genres");
 const customers = require("./routes/customers");
 const rentals = require("./routes/rentals");
 const users = require("./routes/users");
-
+const auth = require("./routes/auth");
 mongoose
   .connect("mongodb://localhost/vidly")
   .then(() => console.log("connected to MongoDB"))
@@ -26,6 +26,7 @@ app.set("views", "./views");
 
 app.use(express.json());
 app.use(cors());
+app.options("/", cors());
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
@@ -34,10 +35,16 @@ app.use("/api/genres", genres);
 app.use("/api/customers", customers);
 app.use("/api/rentals", rentals);
 app.use("/api/users", users);
+app.use("/api/auth", auth);
 app.use("/", home);
 
 console.log(" name: " + config.get("name"));
 console.log(" mail server: " + config.get("mail.host"));
+if (!config.get("jwt_private_key")) {
+  console.error(" jwt PRIVATE_KEY is not defined");
+  process.exit(1);
+}
+console.log("secret for jwt: " + config.get("jwt_private_key"));
 
 if (app.get("env") === "development") {
   app.use(morgan("tiny"));
