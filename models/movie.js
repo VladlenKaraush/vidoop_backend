@@ -23,7 +23,7 @@ const joiSchema = Joi.object({
     .required(),
   numberInStock: Joi.number().min(0),
   dailyRentalRate: Joi.number().min(0),
-  genreId: Joi.string().required()
+  genreId: Joi.objectId().required()
 });
 
 function validate(movie) {
